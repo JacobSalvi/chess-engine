@@ -15,29 +15,37 @@ const BitBoard = struct {
     BLACK_KING: u64 = 0,
 
     fn setBit(value: *u64, position: usize) void {
-        value = value | (1 << position);
+        if (position > 63) {
+            return;
+        }
+        value.* |= (@as(u64, 1) << @intCast(position));
     }
 
-    fn isBitSet(value: u64, position: u8) bool {
-        return (value & (1 << position)) != 0;
+    fn isBitSet(value: u64, position: usize) bool {
+        return (value & (@as(u64, 1) << @intCast(position))) != 0;
     }
 
-    pub fn fromArray(arr: [8][8]u8) BitBoard {
-        const vals = [_]u64{0} ** 12;
-        for (arr, 0..) |el, i| {
-            switch (el) {
-                'p' => BitBoard.setBit(vals[0], i),
-                'k' => BitBoard.setBit(vals[1], i),
-                'q' => BitBoard.setBit(vals[2], i),
-                'r' => BitBoard.setBit(vals[3], i),
-                'n' => BitBoard.setBit(vals[4], i),
-                'b' => BitBoard.setBit(vals[5], i),
-                'P' => BitBoard.setBit(vals[6], i),
-                'K' => BitBoard.setBit(vals[7], i),
-                'Q' => BitBoard.setBit(vals[8], i),
-                'R' => BitBoard.setBit(vals[9], i),
-                'N' => BitBoard.setBit(vals[10], i),
-                'B' => BitBoard.setBit(vals[11], i),
+    pub fn fromArray(arr: [8][]const u8) BitBoard {
+        var vals = [_]u64{0} ** 12;
+        var i: u8 = 0;
+        for (arr) |row| {
+            for (row) |cell| {
+                switch (cell) {
+                    'p' => BitBoard.setBit(&vals[0], i),
+                    'k' => BitBoard.setBit(&vals[1], i),
+                    'q' => BitBoard.setBit(&vals[2], i),
+                    'r' => BitBoard.setBit(&vals[3], i),
+                    'n' => BitBoard.setBit(&vals[4], i),
+                    'b' => BitBoard.setBit(&vals[5], i),
+                    'P' => BitBoard.setBit(&vals[6], i),
+                    'K' => BitBoard.setBit(&vals[7], i),
+                    'Q' => BitBoard.setBit(&vals[8], i),
+                    'R' => BitBoard.setBit(&vals[9], i),
+                    'N' => BitBoard.setBit(&vals[10], i),
+                    'B' => BitBoard.setBit(&vals[11], i),
+                    else => {},
+                }
+                i = i + 1;
             }
         }
         return BitBoard{
@@ -58,63 +66,53 @@ const BitBoard = struct {
 
     pub fn print(self: BitBoard) void {
         for (0..64) |pos| {
-            if (pos % 8 == 0) {
-                std.debug.print("\n");
-            }
             if (BitBoard.isBitSet(self.WHITE_PAWN, pos)) {
-                std.debug.print(" p ");
+                std.debug.print(" p ", .{});
             }
             if (BitBoard.isBitSet(self.WHITE_BISHOP, pos)) {
-                std.debug.print(" b ");
+                std.debug.print(" b ", .{});
             }
             if (BitBoard.isBitSet(self.WHITE_KING, pos)) {
-                std.debug.print(" k ");
+                std.debug.print(" k ", .{});
             }
             if (BitBoard.isBitSet(self.WHITE_QUEEN, pos)) {
-                std.debug.print(" q ");
+                std.debug.print(" q ", .{});
             }
             if (BitBoard.isBitSet(self.WHITE_KNIGHT, pos)) {
-                std.debug.print(" n ");
+                std.debug.print(" n ", .{});
             }
             if (BitBoard.isBitSet(self.WHITE_ROOK, pos)) {
-                std.debug.print(" r ");
+                std.debug.print(" r ", .{});
             }
             if (BitBoard.isBitSet(self.BLACK_PAWN, pos)) {
-                std.debug.print(" P ");
+                std.debug.print(" P ", .{});
             }
             if (BitBoard.isBitSet(self.BLACK_BISHOP, pos)) {
-                std.debug.print(" B ");
+                std.debug.print(" B ", .{});
             }
             if (BitBoard.isBitSet(self.BLACK_KING, pos)) {
-                std.debug.print(" K ");
+                std.debug.print(" K ", .{});
             }
             if (BitBoard.isBitSet(self.BLACK_QUEEN, pos)) {
-                std.debug.print(" Q ");
+                std.debug.print(" Q ", .{});
             }
             if (BitBoard.isBitSet(self.BLACK_KNIGHT, pos)) {
-                std.debug.print(" N ");
+                std.debug.print(" N ", .{});
             }
             if (BitBoard.isBitSet(self.BLACK_ROOK, pos)) {
-                std.debug.print(" R ");
+                std.debug.print(" R ", .{});
+            }
+            if (pos % 8 == 7) {
+                std.debug.print("\n", .{});
             }
         }
     }
 };
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
-
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
-
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
-
-    try bw.flush(); // don't forget to flush!
+    const board = [8][]const u8{ "RNBQKBNR", "PPPPPPPP", "        ", "        ", "        ", "        ", "pppppppp", "rnbqkbnr" };
+    var bitboard = BitBoard.fromArray(board);
+    bitboard.print();
 }
 
 test "simple test" {
